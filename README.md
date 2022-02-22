@@ -38,10 +38,10 @@ yarn test:coverage
 
 Copy `.env.example` to `.env` and override the default values before deploying.
 
-Deploy a contract (eg, ShellFactory):
+Deploy a contract (eg, `MorphsEngine`):
 
 ```
-yarn deploy --network rinkeby --contract ShellFactory
+yarn deploy --network rinkeby --contract MorphsEngine
 ```
 
 > NOTE: The contract will automatically be verified on etherscan
