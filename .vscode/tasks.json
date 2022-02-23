@@ -17,7 +17,7 @@
     },
     {
       "id": "contract",
-      "description": "contract name (eg ShellFactory)",
+      "description": "contract name (eg MyEngine)",
       "type": "promptString"
     }
   ]
