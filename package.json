@@ -16,7 +16,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.4.1",
     "@openzeppelin/contracts-upgradeable": "4.4.1",
-    "@r-group/shell-contracts": "1.0.0-rc5"
+    "@r-group/shell-contracts": "1.0.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.3",

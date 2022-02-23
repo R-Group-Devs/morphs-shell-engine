@@ -669,10 +669,10 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.4.1.tgz#3382db2cd83ab565ed9626765e7da92944b45de8"
   integrity sha512-o+pHCf/yMLSlV5MkDQEzEQL402i6SoRnktru+0rdSxVEFZcTzzGhZCAtZjUFyKGazMSv1TilzMg+RbED1N8XHQ==
 
-"@r-group/shell-contracts@1.0.0-rc5":
-  version "1.0.0-rc5"
-  resolved "https://registry.yarnpkg.com/@r-group/shell-contracts/-/shell-contracts-1.0.0-rc5.tgz#9deccf6ee2d803f43dc04bc10c6e9d623c489f64"
-  integrity sha512-ONqLRFnICTSWg0lW+h/3nS/R+NYgFtAHfniCnsTNA0iJtHh8pMSKPo1Qqzeb74CbymQQVj0aMg+eNRBh3t6Feg==
+"@r-group/shell-contracts@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@r-group/shell-contracts/-/shell-contracts-1.0.0.tgz#eb43da2fa7e5ee585129699e1242967e0e04661e"
+  integrity sha512-XLksccsw6HoGMt4ZwbmgMTJ5eGnCdqYh1yTS4lhx2yUMSNAE/ePiEpI2Zgv2ZC+bV0x6Xz+bxcMRPDGyZXqoFA==
   dependencies:
     "@openzeppelin/contracts" "4.4.1"
     "@openzeppelin/contracts-upgradeable" "4.4.1"
