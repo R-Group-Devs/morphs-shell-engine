@@ -152,7 +152,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
                 abi.encodePacked(
                     "Morph #",
                     Strings.toString(tokenId),
-                    flag == 2 ? ": Cosmic Scroll of " : flag == 1
+                    flag >= 2 ? ": Cosmic Scroll of " : flag == 1
                         ? ": Mythical Scroll of "
                         : ": Scroll of ",
                     getPaletteName(tokenId)
