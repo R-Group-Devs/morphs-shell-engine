@@ -203,6 +203,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return 4;
     }
 
+    /// @notice Get the variation for a specific token
     function getVariation(IShellFramework collection, uint256 tokenId)
         public
         view
