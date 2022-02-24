@@ -155,11 +155,12 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         returns (uint256)
     {
         if (isCutoverToken(collection, tokenId)) {
-            // TODO: keccak and mod based on number of new palettes
-            return 6;
+            // new logic, select palette 7-24 (index 6-23)
+            uint256 select = uint256(keccak256(abi.encodePacked(tokenId))) % 18;
+            return 6 + select;
         }
 
-        // OG logic
+        // OG logic - only selects palette 1-6 (index 0-5)
         return uint256(keccak256(abi.encodePacked(tokenId))) % 6;
     }
 
@@ -177,8 +178,48 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             return "The Jade Prism";
         } else if (index == 5) {
             return "Cosmic Understanding";
-        } else if (index == 6) {
-            return "Palette 7";
+        }
+
+        else if (index == 6) {
+            return "Ancient Grudges";
+        } else if (index == 7) {
+            return "Radiant Beginnings";
+        } else if (index == 8) {
+            return "Desert Sand";
+        } else if (index == 9) {
+            return "Arcane Slate";
+        } else if (index == 10) {
+            return "The Vibrant Forest";
+        } else if (index == 11) {
+            return "Evening Star";
+        }
+
+        else if (index == 12) {
+            return "Dawn";
+        } else if (index == 13) {
+            return "Calm Air";
+        } else if (index == 14) {
+            return "Solarion";
+        } else if (index == 15) {
+            return "Morning Sun";
+        } else if (index == 16) {
+            return "Emerald";
+        } else if (index == 17) {
+            return "Stellaris";
+        }
+
+        else if (index == 18) {
+            return "Future Island";
+        } else if (index == 19) {
+            return "Scorched Emerald";
+        } else if (index == 20) {
+            return "Stone";
+        } else if (index == 21) {
+            return "The Night Sky";
+        } else if (index == 22) {
+            return "The Beacon";
+        } else if (index == 23) {
+            return "Blackskull";
         }
 
         return "";
