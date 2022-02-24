@@ -3,11 +3,12 @@ pragma solidity ^0.8.0;
 
 /*
 
-            ░░░    ░░░  ░░░░░░  ░░░░░░  ░░░░░░  ░░   ░░ ░░░░░░░
-            ▒▒▒▒  ▒▒▒▒ ▒▒    ▒▒ ▒▒   ▒▒ ▒▒   ▒▒ ▒▒   ▒▒ ▒▒
-            ▒▒ ▒▒▒▒ ▒▒ ▒▒    ▒▒ ▒▒▒▒▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒
-            ▓▓  ▓▓  ▓▓ ▓▓    ▓▓ ▓▓   ▓▓ ▓▓      ▓▓   ▓▓      ▓▓
-            ██      ██  ██████  ██   ██ ██      ██   ██ ███████
+            ███╗   ███╗ ██████╗ ██████╗ ██████╗ ██╗  ██╗███████╗
+            ████╗ ████║██╔═══██╗██╔══██╗██╔══██╗██║  ██║██╔════╝
+            ██╔████╔██║██║   ██║██████╔╝██████╔╝███████║███████╗
+            ██║╚██╔╝██║██║   ██║██╔══██╗██╔═══╝ ██╔══██║╚════██║
+            ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║     ██║  ██║███████║
+            ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚══════╝
 
                            https://morphs.wtf
 
@@ -18,8 +19,9 @@ pragma solidity ^0.8.0;
 
     Designed by @polyforms_
 
-    https://playgrounds.wtf
-    https://heyshell.xyz
+    Dreamt up and built at Playgrounds <https://playgrounds.wtf>
+
+    Powered by shell <https://heyshell.xyz>
 
 */
 
@@ -30,13 +32,16 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     error MintingPeriodHasEnded();
 
-    // cant mint after midnight 3/1 CST
+    /// @notice Can't mint after March 1st midnight CST
     uint256 public constant MINTING_ENDS_AT_TIMESTAMP = 1646114400;
 
+    /// @notice Displayed on heyshell.xyz
     function name() external pure returns (string memory) {
-        return "morphs";
+        return "morphs-v2";
     }
 
+    /// @notice Mint a morph!
+    /// @param flag Permenantly written into the NFT. Cannot be modified after mint
     function mint(IShellFramework collection, uint256 flag)
         external
         returns (uint256)
@@ -74,45 +79,47 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return tokenId;
     }
 
-    function getPalette(uint256 tokenId) public pure returns (string memory) {
-        uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 6;
-        return string(abi.encodePacked("P00", Strings.toString(index + 1)));
+    /// @notice Gets the flag value written at mint time for a specific NFT
+    function getFlag(IShellFramework collection, uint256 tokenId)
+        public
+        view
+        returns (uint256)
+    {
+        return
+            collection.readTokenInt(StorageLocation.MINT_DATA, tokenId, "flag");
     }
 
-    function getVariation(uint256 tokenId, uint256 flag)
+    /// @notice Returns true if this token was minted after the engine cutover
+    function isCutoverToken(IShellFramework collection, uint256 tokenId)
         public
-        pure
-        returns (string memory)
+        view
+        returns (bool)
     {
-        if (flag >= 2) {
-            // celestial
-            // doing >= 2 to let curious geeks mint things with custom flag
-            // values.
-            // I wonder if anybody will do this? 🤔
-            return "X001";
-        } else if (flag == 1) {
-            // mythical
-            uint256 i = uint256(keccak256(abi.encodePacked(tokenId))) % 4;
-            return string(abi.encodePacked("M00", Strings.toString(i + 1)));
-        }
+        uint256 cutover = collection.readForkInt(
+            StorageLocation.ENGINE,
+            0,
+            "cutover"
+        );
 
-        // citizen
-        uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 10;
-
-        if (index == 9) {
-            return "C010"; // double digit case
-        } else {
-            return string(abi.encodePacked("C00", Strings.toString(index + 1)));
-        }
+        return cutover != 0 && tokenId >= cutover;
     }
 
-    function getPaletteName(uint256 tokenId)
+    /// @notice Get the palette index for a specific token
+    function getPaletteIndex(IShellFramework collection, uint256 tokenId)
         public
-        pure
-        returns (string memory)
+        view
+        returns (uint256)
     {
-        uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 6;
+        if (isCutoverToken(collection, tokenId)) {
+            return uint256(keccak256(abi.encodePacked(tokenId))) % 6;
+        }
 
+        // TODO: keccak and mod based on number of new palettes
+        return 6;
+    }
+
+    /// @notice Get the name of a palette by index
+    function getPaletteName(uint256 index) public pure returns (string memory) {
         if (index == 0) {
             return "Greyskull";
         } else if (index == 1) {
@@ -125,19 +132,44 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             return "The Jade Prism";
         } else if (index == 5) {
             return "Cosmic Understanding";
+        } else if (index == 6) {
+            return "Palette 7";
         }
 
         return "";
     }
 
-    function getFlag(IShellFramework collection, uint256 tokenId)
-        public
-        view
-        returns (uint256)
-    {
-        return
-            collection.readTokenInt(StorageLocation.MINT_DATA, tokenId, "flag");
-    }
+    // function getPalette(uint256 tokenId) public pure returns (string memory) {
+    //     uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 6;
+    //     return string(abi.encodePacked("P00", Strings.toString(index + 1)));
+    // }
+
+    // function getVariation(uint256 tokenId, uint256 flag)
+    //     public
+    //     pure
+    //     returns (string memory)
+    // {
+    //     if (flag >= 2) {
+    //         // celestial
+    //         // doing >= 2 to let curious geeks mint things with custom flag
+    //         // values.
+    //         // I wonder if anybody will do this? 🤔
+    //         return "X001";
+    //     } else if (flag == 1) {
+    //         // mythical
+    //         uint256 i = uint256(keccak256(abi.encodePacked(tokenId))) % 4;
+    //         return string(abi.encodePacked("M00", Strings.toString(i + 1)));
+    //     }
+
+    //     // citizen
+    //     uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 10;
+
+    //     if (index == 9) {
+    //         return "C010"; // double digit case
+    //     } else {
+    //         return string(abi.encodePacked("C00", Strings.toString(index + 1)));
+    //     }
+    // }
 
     function _computeName(IShellFramework collection, uint256 tokenId)
         internal
@@ -152,7 +184,9 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
                 abi.encodePacked(
                     "Morph #",
                     Strings.toString(tokenId),
-                    flag >= 2 ? ": Cosmic Scroll of " : flag == 1
+                    flag > 2 ? ": Celestial Scroll of " : flag == 2
+                        ? ": Cosmic Scroll of "
+                        : flag == 1
                         ? ": Mythical Scroll of "
                         : ": Scroll of ",
                     getPaletteName(tokenId)
@@ -171,11 +205,21 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return
             string(
                 abi.encodePacked(
-                    flag > 1
+                    flag > 2
+                        ? "A mysterious scroll... you feel it pulsating with celestial energy. It appears to be imbued with a unique signature."
+                        : flag == 2
                         ? "A mysterious scroll... you feel it pulsating with cosmic energy. Its whispers speak secrets of cosmic significance."
-                        : flag > 0
+                        : flag == 1
                         ? "A mysterious scroll... you feel it pulsating with mythical energy. You sense its power is great."
                         : "A mysterious scroll... you feel it pulsating with energy. What secrets might it hold?",
+                    flag > 2
+                        ? string(
+                            abi.encodePacked(
+                                "\\n\\nEternal celestial signature: ",
+                                Strings.toString(flag)
+                            )
+                        )
+                        : "",
                     "\\n\\nhttps://playgrounds.wtf"
                 )
             );
@@ -190,15 +234,8 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     {
         uint256 flag = getFlag(collection, tokenId);
 
-        string memory image = string(
-            abi.encodePacked(
-                "S001-",
-                getPalette(tokenId),
-                "-",
-                getVariation(tokenId, flag),
-                ".png"
-            )
-        );
+        // TODO: re-implement image path generation
+        string memory image = Strings.toString(flag);
 
         return
             string(
@@ -225,22 +262,25 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         override
         returns (Attribute[] memory)
     {
+        uint256 palette = getPaletteIndex(collection, tokenId);
+
         Attribute[] memory attributes = new Attribute[](3);
 
         attributes[0] = Attribute({
             key: "Palette",
-            value: getPaletteName(tokenId)
+            value: getPaletteName(palette)
         });
 
         attributes[1] = Attribute({
             key: "Variation",
-            value: getVariation(tokenId, getFlag(collection, tokenId))
+            // TODO: re-implement variation generation
+            value: "???"
         });
 
         uint256 flag = getFlag(collection, tokenId);
         attributes[2] = Attribute({
             key: "Affinity",
-            value: flag > 1 ? "Cosmic" : flag > 0 ? "Mythical" : "Citizen"
+            value: flag > 2 ? "Celestial":  flag == 2 ? "Cosmic" : flag == 1 ? "Mythical" : "Citizen"
         });
         return attributes;
     }

@@ -59,7 +59,7 @@ describe("Morphs", function () {
   describe("MorphsEngine", () => {
     it("should return correct name", async () => {
       const resp = await testEngine.name();
-      expect(resp).to.eq("morphs");
+      expect(resp).to.eq("morphs-v2");
     });
     it("should mint with no flag", async () => {
       const collection = await createCollection();
@@ -67,6 +67,9 @@ describe("Morphs", function () {
       const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
       expect(metadata.name).to.match(/^Morph #1: Scroll of/);
       expect(metadata.description).to.match(/What secrets might it hold/);
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Affinity")?.value
+      ).to.equal("Citizen");
     });
     it("should mint with flag = 1", async () => {
       const collection = await createCollection();
@@ -74,6 +77,9 @@ describe("Morphs", function () {
       const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
       expect(metadata.name).to.match(/^Morph #1: Mythical Scroll of/);
       expect(metadata.description).to.match(/mythical energy/);
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Affinity")?.value
+      ).to.equal("Mythical");
     });
     it("should mint with flag = 2", async () => {
       const collection = await createCollection();
@@ -81,12 +87,26 @@ describe("Morphs", function () {
       const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
       expect(metadata.name).to.match(/^Morph #1: Cosmic Scroll of/);
       expect(metadata.description).to.match(/cosmic energy/);
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Affinity")?.value
+      ).to.equal("Cosmic");
     });
-    it("should have no issues minting first 100", async () => {
+    it("should mint with flag > 2", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "3");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(metadata.name).to.match(/^Morph #1: Celestial Scroll of/);
+      expect(metadata.description).to.match(/celestial energy/);
+      expect(metadata.description).to.match(/Eternal celestial signature: 3/);
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Affinity")?.value
+      ).to.equal("Celestial");
+    });
+    it("should have no issues minting first 20", async () => {
       const collection = await createCollection();
       await testEngine.mint(collection.address, "0");
       let count = 0;
-      while (++count < 100) {
+      while (++count < 20) {
         await testEngine.mint(collection.address, "1");
         const metadata = metadataFromTokenURI(
           await collection.tokenURI(`${count}`)
