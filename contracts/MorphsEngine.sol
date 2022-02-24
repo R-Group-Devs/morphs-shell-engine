@@ -111,11 +111,12 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         returns (uint256)
     {
         if (isCutoverToken(collection, tokenId)) {
-            return uint256(keccak256(abi.encodePacked(tokenId))) % 6;
+            // TODO: keccak and mod based on number of new palettes
+            return 6;
         }
 
-        // TODO: keccak and mod based on number of new palettes
-        return 6;
+        // OG logic
+        return uint256(keccak256(abi.encodePacked(tokenId))) % 6;
     }
 
     /// @notice Get the name of a palette by index
@@ -139,38 +140,6 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return "";
     }
 
-    // function getPalette(uint256 tokenId) public pure returns (string memory) {
-    //     uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 6;
-    //     return string(abi.encodePacked("P00", Strings.toString(index + 1)));
-    // }
-
-    // function getVariation(uint256 tokenId, uint256 flag)
-    //     public
-    //     pure
-    //     returns (string memory)
-    // {
-    //     if (flag >= 2) {
-    //         // celestial
-    //         // doing >= 2 to let curious geeks mint things with custom flag
-    //         // values.
-    //         // I wonder if anybody will do this? 🤔
-    //         return "X001";
-    //     } else if (flag == 1) {
-    //         // mythical
-    //         uint256 i = uint256(keccak256(abi.encodePacked(tokenId))) % 4;
-    //         return string(abi.encodePacked("M00", Strings.toString(i + 1)));
-    //     }
-
-    //     // citizen
-    //     uint256 index = uint256(keccak256(abi.encodePacked(tokenId))) % 10;
-
-    //     if (index == 9) {
-    //         return "C010"; // double digit case
-    //     } else {
-    //         return string(abi.encodePacked("C00", Strings.toString(index + 1)));
-    //     }
-    // }
-
     function _computeName(IShellFramework collection, uint256 tokenId)
         internal
         view
@@ -189,7 +158,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
                         : flag == 1
                         ? ": Mythical Scroll of "
                         : ": Scroll of ",
-                    getPaletteName(tokenId)
+                    getPaletteName(getPaletteIndex(collection, tokenId))
                 )
             );
     }
@@ -264,7 +233,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     {
         uint256 palette = getPaletteIndex(collection, tokenId);
 
-        Attribute[] memory attributes = new Attribute[](3);
+        Attribute[] memory attributes = new Attribute[](4);
 
         attributes[0] = Attribute({
             key: "Palette",
@@ -282,6 +251,13 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             key: "Affinity",
             value: flag > 2 ? "Celestial":  flag == 2 ? "Cosmic" : flag == 1 ? "Mythical" : "Citizen"
         });
+
+        attributes[3] = Attribute({
+            key: "Era",
+            value: isCutoverToken(collection, tokenId) ? "Genesis II" : "Genesis I"
+        });
+
+
         return attributes;
     }
 }

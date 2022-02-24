@@ -126,8 +126,5 @@ describe("Morphs", function () {
     it("should have palette in attributes", async () => {
       // TODO
     });
-    it("should have affinity in attributes", async () => {
-      // TODO
-    });
   });
 });
