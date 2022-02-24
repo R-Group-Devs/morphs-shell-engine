@@ -169,7 +169,49 @@ describe("Morphs", function () {
       // TODO
     });
     it("should have palette in attributes", async () => {
-      // TODO
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "1");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Palette")?.value
+      ).to.equal("Greyskull");
+    });
+    it("should cutover era in attributes", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      const metadata1 = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata1.attributes?.find((a) => a.trait_type === "Era")?.value
+      ).to.equal("Genesis I");
+
+      await testEngine.cutover(collection.address);
+      await testEngine.mint(collection.address, "0");
+      const metadata2 = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(
+        metadata2.attributes?.find((a) => a.trait_type === "Era")?.value
+      ).to.equal("Genesis II");
+    });
+    it("should have custom flag in description", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "123456789");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(metadata.description).to.match(
+        /Eternal celestial signature: 123456789/
+      );
+    });
+    it("should have era in the description", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      const metadata1 = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(metadata1.description).to.match(
+        /This Morph was minted in the Genesis I era./
+      );
+      await testEngine.cutover(collection.address);
+      await testEngine.mint(collection.address, "0");
+      const metadata2 = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(metadata2.description).to.match(
+        /This Morph was minted in the Genesis II era./
+      );
     });
   });
 });

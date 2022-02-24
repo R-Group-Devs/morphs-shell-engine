@@ -110,6 +110,8 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         }
     }
 
+    /// @notice start using the new token rolling logic, can only be called once
+    /// and by the root fork owner of the collection
     function cutover(IShellFramework collection) external {
         if (collection.readForkInt(StorageLocation.ENGINE, 0, "cutover") != 0) {
             revert InvalidCutover();
@@ -217,7 +219,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             string(
                 abi.encodePacked(
                     flag > 2
-                        ? "A mysterious scroll... you feel it pulsating with celestial energy. It appears to be imbued with a unique signature."
+                        ? "A mysterious scroll... you feel it pulsating with celestial energy. Its presence bridges the gap between old and new."
                         : flag == 2
                         ? "A mysterious scroll... you feel it pulsating with cosmic energy. Its whispers speak secrets of cosmic significance."
                         : flag == 1
@@ -231,6 +233,9 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
                             )
                         )
                         : "",
+                    isCutoverToken(collection, tokenId)
+                        ? "\\n\\nThis Morph was minted in the Genesis II era."
+                        : "\\n\\nThis Morph was minted in the Genesis I era.",
                     "\\n\\nhttps://playgrounds.wtf"
                 )
             );
