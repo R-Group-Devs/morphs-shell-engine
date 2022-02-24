@@ -114,6 +114,39 @@ describe("Morphs", function () {
         expect(metadata.name).to.match(new RegExp(`Morph #${count}`));
       }
     });
+    it("should allow batch minting", async () => {
+      const collection = await createCollection();
+      await testEngine.batchMint(collection.address, 20);
+      expect(await collection.nextTokenId()).to.equal("21");
+      expect(await collection.balanceOf(a0)).to.equal("20");
+    });
+    it("should return true from isTokenCutover once cutover submitted", async () => {
+      const collection = await createCollection();
+      await testEngine.batchMint(collection.address, 5);
+      expect(await testEngine.isCutoverToken(collection.address, "1")).to.equal(
+        false
+      );
+      expect(await testEngine.isCutoverToken(collection.address, "5")).to.equal(
+        false
+      );
+      // cutover --
+      await testEngine.cutover(collection.address);
+      expect(await testEngine.isCutoverToken(collection.address, "1")).to.equal(
+        false
+      );
+      expect(await testEngine.isCutoverToken(collection.address, "5")).to.equal(
+        false
+      );
+      await testEngine.batchMint(collection.address, 5);
+      expect(await testEngine.isCutoverToken(collection.address, "6")).to.equal(
+        true
+      );
+      expect(
+        await testEngine.isCutoverToken(collection.address, "10")
+      ).to.equal(true);
+    });
+    it("should revert if non-owner to cutover", async () => {});
+    it("should revert if cutover attempted if already done", async () => {});
     it("should expose minting end timestamp", async () => {
       expect(await testEngine.MINTING_ENDS_AT_TIMESTAMP()).to.eq(1646114400);
     });

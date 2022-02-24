@@ -30,7 +30,12 @@ import "@r-group/shell-contracts/contracts/engines/OnChainMetadataEngine.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
+    /// @notice Attempted mint after minting period has ended
     error MintingPeriodHasEnded();
+
+    /// @notice Attempted cutover for a collection that already switched, or
+    /// from incorrect msg sender
+    error InvalidCutover();
 
     /// @notice Can't mint after March 1st midnight CST
     uint256 public constant MINTING_ENDS_AT_TIMESTAMP = 1646114400;
@@ -79,6 +84,44 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return tokenId;
     }
 
+    /// @notice Mint several Morphs in a single transaction (flag=0 for all)
+    function batchMint(IShellFramework collection, uint256 count) external {
+        // solhint-disable-next-line not-rely-on-time
+        if (block.timestamp >= MINTING_ENDS_AT_TIMESTAMP) {
+            revert MintingPeriodHasEnded();
+        }
+
+        StringStorage[] memory stringData = new StringStorage[](0);
+        IntStorage[] memory intData = new IntStorage[](0);
+
+        for (uint256 i = 0; i < count; i++) {
+            collection.mint(MintEntry({
+                to: msg.sender,
+                amount: 1,
+                options: MintOptions({
+                    storeEngine: false,
+                    storeMintedTo: false,
+                    storeTimestamp: false,
+                    storeBlockNumber: false,
+                    stringData: stringData,
+                    intData: intData
+                })
+            }));
+        }
+    }
+
+    function cutover(IShellFramework collection) external {
+        if (collection.readForkInt(StorageLocation.ENGINE, 0, "cutover") != 0) {
+            revert InvalidCutover();
+        }
+        if (msg.sender != collection.getForkOwner(0)) {
+            revert InvalidCutover();
+        }
+
+        // solhint-disable-next-line not-rely-on-time
+        collection.writeForkInt(StorageLocation.ENGINE, 0, "cutover", collection.nextTokenId());
+    }
+
     /// @notice Gets the flag value written at mint time for a specific NFT
     function getFlag(IShellFramework collection, uint256 tokenId)
         public
@@ -95,13 +138,13 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         view
         returns (bool)
     {
-        uint256 cutover = collection.readForkInt(
+        uint256 transitionTokenId = collection.readForkInt(
             StorageLocation.ENGINE,
             0,
             "cutover"
         );
 
-        return cutover != 0 && tokenId >= cutover;
+        return transitionTokenId != 0 && tokenId >= transitionTokenId;
     }
 
     /// @notice Get the palette index for a specific token
