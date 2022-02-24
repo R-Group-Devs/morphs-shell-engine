@@ -261,7 +261,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         // 15 new citizens, C11-25
         return
             string.concat(
-                "M",
+                "C",
                 Strings.toString(selectInRange(tokenId, 11, 25))
             );
     }
