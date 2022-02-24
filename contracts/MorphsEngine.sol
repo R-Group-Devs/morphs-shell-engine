@@ -321,7 +321,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     {
         uint256 palette = getPaletteIndex(collection, tokenId);
 
-        Attribute[] memory attributes = new Attribute[](4);
+        Attribute[] memory attributes = new Attribute[](5);
 
         attributes[0] = Attribute({
             key: "Palette",
@@ -343,6 +343,11 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         attributes[3] = Attribute({
             key: "Era",
             value: isCutoverToken(collection, tokenId) ? "Genesis II" : "Genesis I"
+        });
+
+        attributes[4] = Attribute({
+            key: "Signature",
+            value: flag > 0 ? Strings.toString(flag) : "(none)"
         });
 
 

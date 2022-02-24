@@ -176,6 +176,22 @@ describe("Morphs", function () {
         metadata.attributes?.find((a) => a.trait_type === "Palette")?.value
       ).to.equal("Greyskull");
     });
+    it("should have custom flag in attributes", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "420");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Signature")?.value
+      ).to.equal("420");
+    });
+    it("should have custom flag as (none) if 0", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Signature")?.value
+      ).to.equal("(none)");
+    });
     it("should cutover era in attributes", async () => {
       const collection = await createCollection();
       await testEngine.mint(collection.address, "0");
