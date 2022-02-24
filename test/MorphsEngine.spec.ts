@@ -145,8 +145,20 @@ describe("Morphs", function () {
         await testEngine.isCutoverToken(collection.address, "10")
       ).to.equal(true);
     });
-    it("should revert if non-owner to cutover", async () => {});
-    it("should revert if cutover attempted if already done", async () => {});
+    it("should revert if non-owner to cutover", async () => {
+      const collection = await createCollection();
+      const _testEngine = testEngine.connect(accounts[1]);
+      await expect(_testEngine.cutover(collection.address)).to.be.revertedWith(
+        "InvalidCutover"
+      );
+    });
+    it("should revert if cutover attempted if already done", async () => {
+      const collection = await createCollection();
+      await testEngine.cutover(collection.address);
+      await expect(testEngine.cutover(collection.address)).to.be.revertedWith(
+        "InvalidCutover"
+      );
+    });
     it("should expose minting end timestamp", async () => {
       expect(await testEngine.MINTING_ENDS_AT_TIMESTAMP()).to.eq(1646114400);
     });

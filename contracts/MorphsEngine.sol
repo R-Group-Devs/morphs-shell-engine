@@ -118,7 +118,6 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             revert InvalidCutover();
         }
 
-        // solhint-disable-next-line not-rely-on-time
         collection.writeForkInt(StorageLocation.ENGINE, 0, "cutover", collection.nextTokenId());
     }
 
