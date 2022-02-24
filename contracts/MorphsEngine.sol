@@ -460,7 +460,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
 
         attributes[4] = Attribute({
             key: "Signature",
-            value: flag > 0 ? Strings.toString(flag) : "(none)"
+            value: flag > 2 ? Strings.toString(flag) : "(none)"
         });
 
         return attributes;
