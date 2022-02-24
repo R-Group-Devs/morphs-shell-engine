@@ -95,18 +95,20 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         IntStorage[] memory intData = new IntStorage[](0);
 
         for (uint256 i = 0; i < count; i++) {
-            collection.mint(MintEntry({
-                to: msg.sender,
-                amount: 1,
-                options: MintOptions({
-                    storeEngine: false,
-                    storeMintedTo: false,
-                    storeTimestamp: false,
-                    storeBlockNumber: false,
-                    stringData: stringData,
-                    intData: intData
+            collection.mint(
+                MintEntry({
+                    to: msg.sender,
+                    amount: 1,
+                    options: MintOptions({
+                        storeEngine: false,
+                        storeMintedTo: false,
+                        storeTimestamp: false,
+                        storeBlockNumber: false,
+                        stringData: stringData,
+                        intData: intData
+                    })
                 })
-            }));
+            );
         }
     }
 
@@ -120,7 +122,12 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             revert InvalidCutover();
         }
 
-        collection.writeForkInt(StorageLocation.ENGINE, 0, "cutover", collection.nextTokenId());
+        collection.writeForkInt(
+            StorageLocation.ENGINE,
+            0,
+            "cutover",
+            collection.nextTokenId()
+        );
     }
 
     /// @notice Gets the flag value written at mint time for a specific NFT
@@ -148,77 +155,175 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return transitionTokenId != 0 && tokenId >= transitionTokenId;
     }
 
-    /// @notice Get the palette index for a specific token
+    /// @notice Get the palette index (1-based) for a specific token
     function getPaletteIndex(IShellFramework collection, uint256 tokenId)
         public
         view
         returns (uint256)
     {
+        // new logic, select palette 7-24
         if (isCutoverToken(collection, tokenId)) {
-            // new logic, select palette 7-24 (index 6-23)
-            uint256 select = uint256(keccak256(abi.encodePacked(tokenId))) % 18;
-            return 6 + select;
+            return selectInRange(tokenId, 7, 24);
         }
 
-        // OG logic - only selects palette 1-6 (index 0-5)
-        return uint256(keccak256(abi.encodePacked(tokenId))) % 6;
+        // OG logic - only selects palette 1-6
+        return selectInRange(tokenId, 1, 6);
+    }
+
+    /// @notice Get the edition index (0-based) for a specific token
+    function getEditionIndex(IShellFramework collection, uint256 tokenId)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 flag = getFlag(collection, tokenId);
+        bool isCutover = isCutoverToken(collection, tokenId);
+
+        // celestial = always use 0th edition
+        if (flag > 2) {
+            return 0;
+        }
+
+        // OG tokens always = edition 1
+        if (!isCutover) {
+            return 1;
+        }
+
+        // else, edition is strictly a function of the palette
+        // palette will be 7-24 since this is a post-cutover token
+        uint256 palette = getPaletteIndex(collection, tokenId);
+
+        if (palette < 13) {
+            return 2;
+        }
+        if (palette < 19) {
+            return 3;
+        }
+
+        return 4;
+    }
+
+    function getVariation(IShellFramework collection, uint256 tokenId)
+        public
+        view
+        returns (string memory)
+    {
+        bool isCutover = isCutoverToken(collection, tokenId);
+        uint256 flag = getFlag(collection, tokenId);
+
+        // all celestials (old and new) roll a variation based on flag value
+        if (flag > 2) {
+            // 5 celestials, Z1-Z5
+            return
+                string.concat("Z", Strings.toString(selectInRange(flag, 1, 5)));
+        }
+
+        // OG logic
+        if (!isCutover) {
+            if (flag == 2) {
+                // Only 1 OG cosmic
+                return "X1";
+            } else if (flag == 1) {
+                // 4 OG mythicals, M1-M4
+                return
+                    string.concat(
+                        "M",
+                        Strings.toString(selectInRange(tokenId, 1, 4))
+                    );
+            }
+
+            // 10 OG citizen, C1-C10
+            return
+                string.concat(
+                    "C",
+                    Strings.toString(selectInRange(tokenId, 1, 10))
+                );
+        }
+
+        // post-cutover logic
+        if (flag == 2) {
+            // 4 new cosmic, X2-5
+            return
+                string.concat(
+                    "X",
+                    Strings.toString(selectInRange(tokenId, 2, 5))
+                );
+        } else if (flag == 1) {
+            // 11 new mythicals, M5-15
+            return
+                string.concat(
+                    "M",
+                    Strings.toString(selectInRange(tokenId, 5, 15))
+                );
+        }
+
+        // 15 new citizens, C11-25
+        return
+            string.concat(
+                "M",
+                Strings.toString(selectInRange(tokenId, 11, 25))
+            );
+    }
+
+    function selectInRange(
+        uint256 seed,
+        uint256 lower,
+        uint256 upper
+    ) private pure returns (uint256) {
+        uint256 i = uint256(keccak256(abi.encodePacked(seed))) %
+            (upper - lower + 1);
+        return lower + i;
     }
 
     /// @notice Get the name of a palette by index
     function getPaletteName(uint256 index) public pure returns (string memory) {
-        if (index == 0) {
+        if (index == 1) {
             return "Greyskull";
-        } else if (index == 1) {
-            return "Ancient Opinions";
         } else if (index == 2) {
-            return "The Desert Sun";
+            return "Ancient Opinions";
         } else if (index == 3) {
-            return "The Deep";
+            return "The Desert Sun";
         } else if (index == 4) {
-            return "The Jade Prism";
+            return "The Deep";
         } else if (index == 5) {
+            return "The Jade Prism";
+        } else if (index == 6) {
             return "Cosmic Understanding";
-        }
-
-        else if (index == 6) {
-            return "Ancient Grudges";
         } else if (index == 7) {
-            return "Radiant Beginnings";
+            return "Ancient Grudges";
         } else if (index == 8) {
-            return "Desert Sand";
+            return "Radiant Beginnings";
         } else if (index == 9) {
-            return "Arcane Slate";
+            return "Desert Sand";
         } else if (index == 10) {
-            return "The Vibrant Forest";
+            return "Arcane Slate";
         } else if (index == 11) {
+            return "The Vibrant Forest";
+        } else if (index == 12) {
             return "Evening Star";
-        }
-
-        else if (index == 12) {
-            return "Dawn";
         } else if (index == 13) {
-            return "Calm Air";
+            return "Dawn";
         } else if (index == 14) {
-            return "Solarion";
+            return "Calm Air";
         } else if (index == 15) {
-            return "Morning Sun";
+            return "Solarion";
         } else if (index == 16) {
-            return "Emerald";
+            return "Morning Sun";
         } else if (index == 17) {
+            return "Emerald";
+        } else if (index == 18) {
             return "Stellaris";
-        }
-
-        else if (index == 18) {
-            return "Future Island";
         } else if (index == 19) {
-            return "Scorched Emerald";
+            return "Future Island";
         } else if (index == 20) {
-            return "Stone";
+            return "Scorched Emerald";
         } else if (index == 21) {
-            return "The Night Sky";
+            return "Stone";
         } else if (index == 22) {
-            return "The Beacon";
+            return "The Night Sky";
         } else if (index == 23) {
+            return "The Beacon";
+        } else if (index == 24) {
             return "Blackskull";
         }
 
@@ -257,28 +362,24 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         uint256 flag = getFlag(collection, tokenId);
 
         return
-            string(
-                abi.encodePacked(
-                    flag > 2
-                        ? "A mysterious scroll... you feel it pulsating with celestial energy. Its presence bridges the gap between old and new."
-                        : flag == 2
-                        ? "A mysterious scroll... you feel it pulsating with cosmic energy. Its whispers speak secrets of cosmic significance."
-                        : flag == 1
-                        ? "A mysterious scroll... you feel it pulsating with mythical energy. You sense its power is great."
-                        : "A mysterious scroll... you feel it pulsating with energy. What secrets might it hold?",
-                    flag > 2
-                        ? string(
-                            abi.encodePacked(
-                                "\\n\\nEternal celestial signature: ",
-                                Strings.toString(flag)
-                            )
-                        )
-                        : "",
-                    isCutoverToken(collection, tokenId)
-                        ? "\\n\\nThis Morph was minted in the Genesis II era."
-                        : "\\n\\nThis Morph was minted in the Genesis I era.",
-                    "\\n\\nhttps://playgrounds.wtf"
-                )
+            string.concat(
+                flag > 2
+                    ? "A mysterious scroll... you feel it pulsating with celestial energy. Its presence bridges the gap between old and new."
+                    : flag == 2
+                    ? "A mysterious scroll... you feel it pulsating with cosmic energy. Its whispers speak secrets of cosmic significance."
+                    : flag == 1
+                    ? "A mysterious scroll... you feel it pulsating with mythical energy. You sense its power is great."
+                    : "A mysterious scroll... you feel it pulsating with energy. What secrets might it hold?",
+                flag > 2
+                    ? string.concat(
+                        "\\n\\nEternal celestial signature: ",
+                        Strings.toString(flag)
+                    )
+                    : "",
+                isCutoverToken(collection, tokenId)
+                    ? "\\n\\nThis Morph was minted in the Genesis II era."
+                    : "\\n\\nThis Morph was minted in the Genesis I era.",
+                "\\n\\nhttps://playgrounds.wtf"
             );
     }
 
@@ -289,17 +390,25 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         override
         returns (string memory)
     {
-        uint256 flag = getFlag(collection, tokenId);
+        uint256 edition = getEditionIndex(collection, tokenId);
+        uint256 palette = getPaletteIndex(collection, tokenId);
+        string memory variation = getVariation(collection, tokenId);
 
-        // TODO: re-implement image path generation
-        string memory image = Strings.toString(flag);
+        string memory image = string.concat(
+            "S",
+            Strings.toString(edition),
+            "-",
+            "P",
+            Strings.toString(palette),
+            "-",
+            variation,
+            ".png"
+        );
 
         return
-            string(
-                abi.encodePacked(
-                    "ipfs://ipfs/QmRCKXGuM47BzepjiHu2onshPFRWb7TMVEfd4K87cszg4w/",
-                    image
-                )
+            string.concat(
+                "ipfs://ipfs/QmeQi6Ufs4JyrMR54o9TRraKMRhp1MTL2Bn811ad8Y7kK1/",
+                image
             );
     }
 
@@ -330,26 +439,28 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
 
         attributes[1] = Attribute({
             key: "Variation",
-            // TODO: re-implement variation generation
-            value: "???"
+            value: getVariation(collection, tokenId)
         });
 
         uint256 flag = getFlag(collection, tokenId);
         attributes[2] = Attribute({
             key: "Affinity",
-            value: flag > 2 ? "Celestial":  flag == 2 ? "Cosmic" : flag == 1 ? "Mythical" : "Citizen"
+            value: flag > 2 ? "Celestial" : flag == 2 ? "Cosmic" : flag == 1
+                ? "Mythical"
+                : "Citizen"
         });
 
         attributes[3] = Attribute({
             key: "Era",
-            value: isCutoverToken(collection, tokenId) ? "Genesis II" : "Genesis I"
+            value: isCutoverToken(collection, tokenId)
+                ? "Genesis II"
+                : "Genesis I"
         });
 
         attributes[4] = Attribute({
             key: "Signature",
             value: flag > 0 ? Strings.toString(flag) : "(none)"
         });
-
 
         return attributes;
     }
