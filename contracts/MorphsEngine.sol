@@ -16,8 +16,19 @@ pragma solidity ^0.8.0;
 
     Dreamt up and built at Playgrounds <https://playgrounds.wtf>
     Powered by shell <https://heyshell.xyz>
+    Designed by @polyforms_ <https://twitter.com/polyforms_>
 
     ---
+
+    This is the second official Morphs engine from Playgrounds 🪐
+
+    It adds a few twists for the final days of minting and leaves some open
+    ended ideas to explore in future engines.
+
+    You are free to iterate on any Morphs tokens you own! If others like the
+    updates you've made to the project, they could join your fork too.
+
+    Join us in the lab: https://discord.gg/uskZYttHw6
 
 */
 
