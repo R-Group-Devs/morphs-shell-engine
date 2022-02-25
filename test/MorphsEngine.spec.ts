@@ -181,6 +181,19 @@ describe("Morphs", function () {
         metadata.attributes?.find((a) => a.trait_type === "Signature")?.value
       ).to.equal("420");
     });
+    it("should have group in attributes", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "420");
+      await testEngine.mint(collection.address, "0");
+      const metadata1 = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata1.attributes?.find((a) => a.trait_type === "Group")?.value
+      ).to.equal("Group 0");
+      const metadata2 = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(
+        metadata2.attributes?.find((a) => a.trait_type === "Group")?.value
+      ).to.equal("Group 1");
+    });
     it("should have custom flag as (none) if 0", async () => {
       const collection = await createCollection();
       await testEngine.mint(collection.address, "0");

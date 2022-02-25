@@ -433,7 +433,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     {
         uint256 palette = getPaletteIndex(collection, tokenId);
 
-        Attribute[] memory attributes = new Attribute[](5);
+        Attribute[] memory attributes = new Attribute[](6);
 
         attributes[0] = Attribute({
             key: "Palette",
@@ -463,6 +463,14 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         attributes[4] = Attribute({
             key: "Signature",
             value: flag > 2 ? Strings.toString(flag) : "(none)"
+        });
+
+        attributes[5] = Attribute({
+            key: "Group",
+            value: string.concat(
+                "Group ",
+                Strings.toString(getEditionIndex(collection, tokenId))
+            )
         });
 
         return attributes;
