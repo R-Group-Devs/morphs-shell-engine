@@ -270,5 +270,53 @@ describe("Morphs", function () {
         metadata.attributes?.find((a) => a.trait_type === "Sigil")?.value
       ).to.equal("Unaligned");
     });
+    it("Should be entangled if flag address has balance > 0", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      // token 2 entangled with account 0
+      await testEngine.connect(accounts[1]).mint(collection.address, a0);
+      const metadata = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Quantum Status")
+          ?.value
+      ).to.equal("Entangled");
+    });
+    it("Should not be entangled if flag isnt an address", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      // token 2 entangled with account 0
+      await testEngine.connect(accounts[1]).mint(collection.address, "123");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Quantum Status")
+          ?.value
+      ).to.equal("Independent");
+    });
+    it("Should be labeled entangled if entangled", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      // token 2 entangled with account 0
+      await testEngine.connect(accounts[1]).mint(collection.address, a0);
+      const metadata = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(metadata.name).to.match(/Morph #2: Entangled Scroll of/);
+    });
+    it("Should mention entangled address in description", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      // token 2 entangled with account 0
+      await testEngine.connect(accounts[1]).mint(collection.address, a0);
+      const metadata = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(metadata.description).to.match(
+        new RegExp(`${a0.toLowerCase()}`, "m")
+      );
+    });
+    it("Should not mention flag if entangled", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      // token 2 entangled with account 0
+      await testEngine.connect(accounts[1]).mint(collection.address, a0);
+      const metadata = metadataFromTokenURI(await collection.tokenURI("2"));
+      expect(metadata.description).not.to.match(/signature/m);
+    });
   });
 });

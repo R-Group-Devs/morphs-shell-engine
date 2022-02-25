@@ -407,6 +407,20 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             );
     }
 
+    /// @notice Returns true if a token has an address as a flag that has at
+    /// least 1 Morph
+    function isEntangled(IShellFramework collection, uint256 tokenId)
+        public
+        view
+        returns (bool)
+    {
+        uint256 flag = getFlag(collection, tokenId);
+        IERC721 erc721 = IERC721(address(collection));
+        address subject = address(uint160(flag));
+
+        return flag > 0 && erc721.balanceOf(subject) > 0;
+    }
+
     function _computeName(IShellFramework collection, uint256 tokenId)
         internal
         view
@@ -414,13 +428,16 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         returns (string memory)
     {
         uint256 flag = getFlag(collection, tokenId);
+        bool entangled = isEntangled(collection, tokenId);
 
         return
             string(
                 abi.encodePacked(
                     "Morph #",
                     Strings.toString(tokenId),
-                    flag > 2 ? ": Celestial Scroll of " : flag == 2
+                    entangled ? ": Entangled Scroll of " : flag > 2
+                        ? ": Celestial Scroll of "
+                        : flag == 2
                         ? ": Cosmic Scroll of "
                         : flag == 1
                         ? ": Mythical Scroll of "
@@ -447,7 +464,12 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
                     : flag == 1
                     ? "A mysterious scroll... you feel it pulsating with mythical energy. You sense its power is great."
                     : "A mysterious scroll... you feel it pulsating with energy. What secrets might it hold?",
-                flag > 2
+                isEntangled(collection, tokenId)
+                    ? string.concat(
+                        "\\n\\nThis Morph is entangled with address ",
+                        Strings.toHexString(flag)
+                    )
+                    : flag > 2
                     ? string.concat(
                         "\\n\\nEternal celestial signature: ",
                         Strings.toString(flag)
@@ -508,7 +530,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         uint256 palette = getPaletteIndex(collection, tokenId);
         string memory sigil = getSigil(collection, tokenId);
 
-        Attribute[] memory attributes = new Attribute[](7);
+        Attribute[] memory attributes = new Attribute[](8);
 
         attributes[0] = Attribute({
             key: "Palette",
@@ -551,6 +573,13 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         attributes[6] = Attribute({
             key: "Sigil",
             value: bytes(sigil).length > 0 ? sigil : "Unaligned"
+        });
+
+        attributes[7] = Attribute({
+            key: "Quantum Status",
+            value: isEntangled(collection, tokenId)
+                ? "Entangled"
+                : "Independent"
         });
 
         return attributes;
