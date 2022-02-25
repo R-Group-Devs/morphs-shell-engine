@@ -35,6 +35,7 @@ pragma solidity ^0.8.0;
 import "@r-group/shell-contracts/contracts/engines/ShellBaseEngine.sol";
 import "@r-group/shell-contracts/contracts/engines/OnChainMetadataEngine.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     /// @notice Attempted mint after minting period has ended
@@ -43,6 +44,15 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     /// @notice Attempted cutover for a collection that already switched, or
     /// from incorrect msg sender
     error InvalidCutover();
+
+    /// @notice Some actions require msg.sender to own the token being
+    /// interacting with
+    error NotTokenOwner();
+
+    /// @notice Morphs only works with ERC-721s for now, since we are allowing
+    /// owner-specific behavior with sigils and balance checks for entangled
+    /// Morphs. It could be made compat with ERC-1155s with some finessing if desired
+    error InvalidCollection();
 
     /// @notice Can't mint after March 1st midnight CST
     uint256 public constant MINTING_ENDS_AT_TIMESTAMP = 1646114400;
@@ -129,12 +139,32 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             revert InvalidCutover();
         }
 
+        // cutover token = next token ID, all future tokens will use new algo
         collection.writeForkInt(
             StorageLocation.ENGINE,
             0,
             "cutover",
             collection.nextTokenId()
         );
+    }
+
+    // function updateSigil(IShellFramework collection, uint256 tokenId, string memory sigil) external {
+    //     if (collection.ownerOf)
+    // }
+
+    /// @dev because of the owner semantics, we want to be able to assume the
+    /// collection is a 721
+    function afterEngineSet(uint256)
+        external
+        view
+        override(IEngine, ShellBaseEngine)
+    {
+        IShellFramework collection = IShellFramework(msg.sender);
+        bool is721 = collection.supportsInterface(type(IERC721).interfaceId);
+
+        if (!is721) {
+            revert InvalidCollection();
+        }
     }
 
     /// @notice Gets the flag value written at mint time for a specific NFT
@@ -273,6 +303,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
             );
     }
 
+    /// @dev return a number between lower and upper, inclusive... based on seed
     function selectInRange(
         uint256 seed,
         uint256 lower,

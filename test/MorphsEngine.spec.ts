@@ -200,7 +200,7 @@ describe("Morphs", function () {
       const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
       expect(
         metadata.attributes?.find((a) => a.trait_type === "Signature")?.value
-      ).to.equal("(none)");
+      ).to.equal("None");
     });
     it("should cutover era in attributes", async () => {
       const collection = await createCollection();
