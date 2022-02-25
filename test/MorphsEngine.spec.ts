@@ -239,5 +239,36 @@ describe("Morphs", function () {
         /This Morph was minted in the Genesis II era./
       );
     });
+    it("should allow owner to set sigil", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      await testEngine.updateSigil(collection.address, "1", "TEST");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Sigil")?.value
+      ).to.equal("TEST");
+    });
+    it("should revert if sigil set comes from non-owner", async () => {
+      const collection = await createCollection();
+      await testEngine.connect(accounts[1]).mint(collection.address, "0");
+      await expect(
+        testEngine.updateSigil(collection.address, "1", "TEST")
+      ).to.be.revertedWith("NotTokenOwner()");
+    });
+    it("should revert if sigil too long", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      await expect(
+        testEngine.updateSigil(collection.address, "1", "123456789")
+      ).to.be.revertedWith("InvalidSigil()");
+    });
+    it("should display sigil as Unaligned if not set", async () => {
+      const collection = await createCollection();
+      await testEngine.mint(collection.address, "0");
+      const metadata = metadataFromTokenURI(await collection.tokenURI("1"));
+      expect(
+        metadata.attributes?.find((a) => a.trait_type === "Sigil")?.value
+      ).to.equal("Unaligned");
+    });
   });
 });

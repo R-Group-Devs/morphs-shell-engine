@@ -54,6 +54,9 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
     /// Morphs. It could be made compat with ERC-1155s with some finessing if desired
     error InvalidCollection();
 
+    /// @notice Sigil attempted to be set that didnt pass verification
+    error InvalidSigil();
+
     /// @notice Can't mint after March 1st midnight CST
     uint256 public constant MINTING_ENDS_AT_TIMESTAMP = 1646114400;
 
@@ -148,9 +151,30 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         );
     }
 
-    // function updateSigil(IShellFramework collection, uint256 tokenId, string memory sigil) external {
-    //     if (collection.ownerOf)
-    // }
+    /// @notice Owner of a token may write a "sigil" string value to token
+    /// storage at any time
+    function updateSigil(
+        IShellFramework collection,
+        uint256 tokenId,
+        string memory sigil
+    ) external {
+        IERC721 erc721 = IERC721(address(collection));
+
+        if (erc721.ownerOf(tokenId) != msg.sender) {
+            revert NotTokenOwner();
+        }
+
+        if (bytes(sigil).length > 8) {
+            revert InvalidSigil();
+        }
+
+        collection.writeTokenString(
+            StorageLocation.ENGINE,
+            tokenId,
+            "sigil",
+            sigil
+        );
+    }
 
     /// @dev because of the owner semantics, we want to be able to assume the
     /// collection is a 721
@@ -369,6 +393,20 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         return "";
     }
 
+    /// @notice Read the sigil value in storage for a specific token
+    function getSigil(IShellFramework collection, uint256 tokenId)
+        public
+        view
+        returns (string memory)
+    {
+        return
+            collection.readTokenString(
+                StorageLocation.ENGINE,
+                tokenId,
+                "sigil"
+            );
+    }
+
     function _computeName(IShellFramework collection, uint256 tokenId)
         internal
         view
@@ -468,8 +506,9 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
         returns (Attribute[] memory)
     {
         uint256 palette = getPaletteIndex(collection, tokenId);
+        string memory sigil = getSigil(collection, tokenId);
 
-        Attribute[] memory attributes = new Attribute[](6);
+        Attribute[] memory attributes = new Attribute[](7);
 
         attributes[0] = Attribute({
             key: "Palette",
@@ -507,6 +546,11 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
                 "Group ",
                 Strings.toString(getEditionIndex(collection, tokenId))
             )
+        });
+
+        attributes[6] = Attribute({
+            key: "Sigil",
+            value: bytes(sigil).length > 0 ? sigil : "Unaligned"
         });
 
         return attributes;
