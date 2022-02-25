@@ -10,20 +10,14 @@ pragma solidity ^0.8.0;
             ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║     ██║  ██║███████║
             ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚══════╝
 
-                               Genesis II
+                         Genesis II - 2022-02-25
 
                            https://morphs.wtf
 
-    Drifting through the immateria you find a scroll. You sense something
-    mysterious, cosmic.
-
-    You feel compelled to take it. After all, what have you got to lose...
-
-    Designed by @polyforms_
-
     Dreamt up and built at Playgrounds <https://playgrounds.wtf>
-
     Powered by shell <https://heyshell.xyz>
+
+    ---
 
 */
 
@@ -462,7 +456,7 @@ contract MorphsEngine is ShellBaseEngine, OnChainMetadataEngine {
 
         attributes[4] = Attribute({
             key: "Signature",
-            value: flag > 2 ? Strings.toString(flag) : "(none)"
+            value: flag > 2 ? Strings.toString(flag) : "None"
         });
 
         attributes[5] = Attribute({
