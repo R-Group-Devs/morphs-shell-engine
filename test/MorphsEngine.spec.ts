@@ -165,9 +165,6 @@ describe("Morphs", function () {
     it("should not allow minting after 3/1", async () => {
       // TODO
     });
-    it("should have variation in attributes", async () => {
-      // TODO
-    });
     it("should have palette in attributes", async () => {
       const collection = await createCollection();
       await testEngine.mint(collection.address, "1");

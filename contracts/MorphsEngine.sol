@@ -10,6 +10,8 @@ pragma solidity ^0.8.0;
             ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║     ██║  ██║███████║
             ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚══════╝
 
+                               Genesis II
+
                            https://morphs.wtf
 
     Drifting through the immateria you find a scroll. You sense something
